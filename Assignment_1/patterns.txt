@@ -14,10 +14,15 @@
 
 
 // Twenty-four seven
-\d+/\d+
+
 
 
 // ADD YOUR PATTERNS HERE
+
+
+// Twenty-four seven
+\d+/\d+
+
 
 // The patterns will be tried from top to bottom, so it is a
 // good idea to put more specific patterns above more general
