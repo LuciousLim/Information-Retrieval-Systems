@@ -13,12 +13,18 @@
 // wish.
 
 
-// Twenty-four seven
-
-
 
 // ADD YOUR PATTERNS HERE
 
+
+// Email
+[a-zA-Z0-9!`@\\_\-.]+@[a-zA-Z0-9.]+
+
+// Compound word (xxxx-xxxx)
+\w+-\w+
+
+// abbreviation
+[a-zA-Z0-9.]+.
 
 // Twenty-four seven
 \d+/\d+
