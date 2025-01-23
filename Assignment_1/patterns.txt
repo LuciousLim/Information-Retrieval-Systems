@@ -17,17 +17,49 @@
 // ADD YOUR PATTERNS HERE
 
 
+// URI
+https?:\/\/[^\s<>{}|\\"']+
+
+// Combined number
+\b\d+([-,\.]\d+)+\b
+
+// Phone number
+\+\d+
+
 // Email
-[a-zA-Z0-9!`@\\_\-.]+@[a-zA-Z0-9.]+
+([^\s"'\\!:\/])+@[^\s"'\\!:\/]+
 
 // Compound word (xxxx-xxxx)
 \w+-\w+
 
-// abbreviation
-[a-zA-Z0-9.]+.
+// Dollar$
+\$\d+
+
+// xx'xx
+\b\w+'+\w+\b
+
+// Citation
+(?<='|")(\w+)(?="|')
+
+// 'xx
+'+\w+\b
+
+// Clock
+\d+(:\d+)+
+
+// e.g.
+\b\w+\.\w+\.
+
+// File
+\b\w+\.\w+
 
 // Twenty-four seven
 \d+/\d+
+
+
+
+
+
 
 
 // The patterns will be tried from top to bottom, so it is a
