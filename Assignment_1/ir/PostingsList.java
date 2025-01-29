@@ -25,6 +25,18 @@ public class PostingsList {
     return list.get( i );
     }
 
+    /** Insert element in descending order*/
+    public void add(PostingsEntry postingsEntry) {
+        for(int i = 0; i < size(); i++){
+            if (postingsEntry.docID == list.get(i).docID){
+                return;
+            }
+            else if(postingsEntry.docID < list.get(i).docID){
+                list.add(i, postingsEntry);
+                return;
+            }
+        }
+    }
     // 
     //  YOUR CODE HERE
     //
