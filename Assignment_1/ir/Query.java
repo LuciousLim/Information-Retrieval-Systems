@@ -115,6 +115,14 @@ public class Query {
         //  YOUR CODE HERE
         //
     }
+
+    public String toString(){
+        String s = "";
+        for(int i = 0; i < queryterm.size(); i++){
+            s += queryterm.get(i).term + "(" + queryterm.get(i).weight + ") ";
+        }
+        return s;
+    }
 }
 
 

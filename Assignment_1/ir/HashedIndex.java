@@ -27,10 +27,10 @@ public class HashedIndex implements Index {
      */
     public void insert( String token, int docID, int offset ) {
         PostingsEntry postingsEntry = new PostingsEntry();
-        PostingsList postingsList = new PostingsList();
         postingsEntry.docID = docID;
 
         if(index.get(token) == null){
+            PostingsList postingsList = new PostingsList();
             postingsList.add(postingsEntry);
             index.put(token, postingsList);
         } else {

@@ -29,9 +29,12 @@ public class Searcher {
      *  @return A postings list representing the result of the query.
      */
     public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normType ) {
+        System.out.println("Query: " + query.toString());
+
         if(query.queryterm.size() > 0){
             return this.index.getPostings(query.queryterm.get(0).term);
         }
+
         return null;
     }
 }
