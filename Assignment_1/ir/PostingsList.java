@@ -9,7 +9,7 @@ package ir;
 
 import java.util.ArrayList;
 
-public class PostingsList {
+public class PostingsList implements Cloneable{
     
     /** The postings list */
     private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
@@ -17,13 +17,24 @@ public class PostingsList {
 
     /** Number of postings in this list. */
     public int size() {
-    return list.size();
+        return list.size();
     }
 
     /** Returns the ith posting. */
     public PostingsEntry get( int i ) {
-    return list.get( i );
+        return list.get( i );
     }
+
+    public void clearList() {
+        this.list.clear();
+    }
+
+    public void copy(PostingsList postingsList) {
+        for (int i = 0; i < postingsList.size(); i++) {
+            this.list.add(postingsList.list.get(i));
+        }
+    }
+
 
     /** Insert element in descending order*/
     public void add(PostingsEntry postingsEntry) {
@@ -31,7 +42,11 @@ public class PostingsList {
             for(int i = 0; i < size(); i++){
                 if (postingsEntry.docID == list.get(i).docID){
                     return;
-                } else if(postingsEntry.docID > list.get(i).docID){
+                }
+                else if (i == size() - 1) {
+                    list.add(postingsEntry);
+                }
+                else if (postingsEntry.docID > list.get(i).docID){
                     list.add(i, postingsEntry);
                     return;
                 }

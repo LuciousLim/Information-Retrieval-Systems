@@ -26,15 +26,12 @@ public class HashedIndex implements Index {
      *  Inserts this token in the hashtable.
      */
     public void insert( String token, int docID, int offset ) {
-        PostingsEntry postingsEntry = new PostingsEntry();
-        postingsEntry.docID = docID;
-
         if(index.get(token) == null){
             PostingsList postingsList = new PostingsList();
-            postingsList.add(postingsEntry);
+            postingsList.add(new PostingsEntry(docID));
             index.put(token, postingsList);
         } else {
-            getPostings(token).add(postingsEntry);
+            getPostings(token).add(new PostingsEntry(docID));
         }
     }
 
