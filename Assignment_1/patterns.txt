@@ -16,7 +16,6 @@
 
 // ADD YOUR PATTERNS HERE
 
-
 // URI
 https?:\/\/[^\s<>{}|\\"']+
 
@@ -55,10 +54,6 @@ https?:\/\/[^\s<>{}|\\"']+
 
 // Twenty-four seven
 \d+/\d+
-
-
-
-
 
 
 

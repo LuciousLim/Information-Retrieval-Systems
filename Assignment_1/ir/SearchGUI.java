@@ -12,6 +12,9 @@ import javax.swing.*;
 import javax.swing.text.*;
 import javax.swing.event.*;
 import javax.swing.border.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.io.*;
 
@@ -301,7 +304,17 @@ public class SearchGUI extends JFrame {
         displayInfoText( String.format( "Found %d matching document(s) in %.3f seconds", results.size(), elapsedTime ));
         box = new JCheckBox[maxResultsToDisplay];
         int i;
+
         for ( i=0; i<results.size() && i<maxResultsToDisplay; i++ ) {
+//            String fileName = displayableFileName(engine.index.docNames.get(results.get(i).docID));
+//
+//            try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("output.txt"), StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+//                writer.write(fileName);
+//                writer.newLine();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+
             String description = i + ". " + displayableFileName( engine.index.docNames.get( results.get(i).docID ));
             if ( queryType == QueryType.RANKED_QUERY ) {
                 description += "   " + String.format( "%.5f", results.get(i).score );

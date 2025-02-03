@@ -36,7 +36,30 @@ public class Searcher {
             return this.index.getPostings(query.queryterm.get(0).term);
         }
         else if (query.queryterm.size() > 1 && queryType.equals(QueryType.INTERSECTION_QUERY)){
-            return intersection(extractPostingLists(query));
+//            return intersection(extractPostingLists(query));
+            PostingsList result = null;
+
+            // traverse the queryterms
+            for (int i = 0; i < query.queryterm.size(); i++){
+                PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
+
+                // return a empty list if the posting list is empty,
+                if (postingsList == null){
+                    return new PostingsList();
+                }
+
+                // when the first term come, the result is empty,
+                // give the first term's posting list to it
+                if (result == null){
+                    result = postingsList;
+                } else {
+                    result = intersect(result, postingsList);
+                }
+
+            }
+
+            return result;
+
         }
 
         return null;
@@ -53,6 +76,10 @@ public class Searcher {
     }
 
     public PostingsList intersection(List<PostingsList> postingsLists){
+        if (postingsLists == null || postingsLists.size() < 2) {
+            return new PostingsList();
+        }
+
         PostingsList result = new PostingsList();
         PostingsList comparingList = new PostingsList();
         int left = 0, right = 1;
@@ -76,7 +103,8 @@ public class Searcher {
                     int doc_i = comparingList.get(i).docID, doc_j = postingsLists.get(right).get(j).docID;
                     if (doc_i == doc_j){
                         result.add(new PostingsEntry(doc_i));
-                        i++; j++;
+                        i++;
+                        j++;
                     }
                     else if (doc_i > doc_j){
                         i++;
@@ -88,6 +116,29 @@ public class Searcher {
 
                 left++;
                 right++;
+            }
+        }
+
+        return result;
+    }
+
+    public PostingsList intersect(PostingsList pl1, PostingsList pl2){
+        PostingsList result = new PostingsList();
+
+        int i = 0, j = 0;
+        while (i < pl1.size() && j < pl2.size()){
+            int doc_i = pl1.get(i).docID, doc_j = pl2.get(j).docID;
+            if (doc_i == doc_j){
+                result.add(new PostingsEntry(doc_i));
+                i++;
+                j++;
+            }
+            // the docIDs are in descending order,
+            else if (doc_i > doc_j){
+                i++;
+            }
+            else {
+                j++;
             }
         }
 

@@ -14,6 +14,10 @@ public class PostingsList implements Cloneable{
     /** The postings list */
     private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
 
+    public ArrayList<PostingsEntry> getList(){
+        return list;
+    }
+
 
     /** Number of postings in this list. */
     public int size() {
@@ -40,21 +44,22 @@ public class PostingsList implements Cloneable{
     public void add(PostingsEntry postingsEntry) {
         if(size() > 0){
             for(int i = 0; i < size(); i++){
+                // if there has same docID, quit insert
                 if (postingsEntry.docID == list.get(i).docID){
+                    return;
+                }
+                // move the cursor until it can not find an element that is smaller than it
+                else if (postingsEntry.docID > list.get(i).docID){
+                    list.add(i, postingsEntry);
                     return;
                 }
                 else if (i == size() - 1) {
                     list.add(postingsEntry);
                 }
-                else if (postingsEntry.docID > list.get(i).docID){
-                    list.add(i, postingsEntry);
-                    return;
-                }
             }
         }   else {
             list.add(postingsEntry);
         }
-
     }
     // 
     //  YOUR CODE HERE

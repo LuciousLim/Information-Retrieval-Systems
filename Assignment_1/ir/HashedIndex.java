@@ -26,11 +26,14 @@ public class HashedIndex implements Index {
      *  Inserts this token in the hashtable.
      */
     public void insert( String token, int docID, int offset ) {
-        if(index.get(token) == null){
-            PostingsList postingsList = new PostingsList();
-            postingsList.add(new PostingsEntry(docID));
-            index.put(token, postingsList);
-        } else {
+        // if the token does not exist, put <token, docID>
+        if(!index.containsKey(token)){
+            PostingsList pl = new PostingsList();
+            pl.add(new PostingsEntry(docID));
+            index.put(token, pl);
+        }
+        // if token exists but it does not contain the docID, create a new entry and insert
+        else if (!getPostings(token).getList().contains(docID)){
             getPostings(token).add(new PostingsEntry(docID));
         }
     }
