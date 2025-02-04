@@ -29,6 +29,24 @@ public class PostingsList implements Cloneable{
         return list.get( i );
     }
 
+    public PostingsEntry getById(int docID){
+        for (PostingsEntry entry : list){
+            if (entry.docID == docID){
+                return entry;
+            }
+        }
+        return new PostingsEntry();
+    }
+
+    public boolean isContainById(int docID){
+        for (PostingsEntry entry : list){
+            if (entry.docID == docID){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void clearList() {
         this.list.clear();
     }

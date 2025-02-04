@@ -18,10 +18,20 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     public int docID;
     public double score = 0;
 
+    // adding for task 1.4
+    public ArrayList<Integer> offsets = new ArrayList<Integer>();
+
+
     public  PostingsEntry(){}
 
     public  PostingsEntry(int docID){
+
         this.docID = docID;
+    }
+
+    public PostingsEntry(int docID, int offset){
+        this.docID = docID;
+        this.offsets.add(offset);
     }
 
     /**
@@ -32,6 +42,10 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
      *  descending order.
      */
     public int compareTo( PostingsEntry other ) {return Double.compare( other.score, score );}
+
+    public void addOffset(int offset){
+        this.offsets.add(offset);
+    }
 
 
     //

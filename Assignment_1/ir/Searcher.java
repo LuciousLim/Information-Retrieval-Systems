@@ -8,6 +8,7 @@
 package ir;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -32,9 +33,13 @@ public class Searcher {
      *  @return A postings list representing the result of the query.
      */
     public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normType ) {
+
+        // task 1.2, single word search
         if(query.queryterm.size() == 1){
             return this.index.getPostings(query.queryterm.get(0).term);
         }
+
+        // task 1.3, intersect search
         else if (query.queryterm.size() > 1 && queryType.equals(QueryType.INTERSECTION_QUERY)){
 //            return intersection(extractPostingLists(query));
             PostingsList result = null;
@@ -43,7 +48,7 @@ public class Searcher {
             for (int i = 0; i < query.queryterm.size(); i++){
                 PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
 
-                // return a empty list if the posting list is empty,
+                // return an empty list if the posting list is empty,
                 if (postingsList == null){
                     return new PostingsList();
                 }
@@ -60,6 +65,32 @@ public class Searcher {
 
             return result;
 
+        }
+
+        // task 1.4, phrase search
+        else if (query.queryterm.size() > 1 && queryType.equals(QueryType.PHRASE_QUERY)){
+            PostingsList result = null;
+
+            // traverse the queryterms
+            for (int i = 0; i < query.queryterm.size(); i++){
+                PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
+
+                // return an empty list if the posting list is empty,
+                if (postingsList == null){
+                    return new PostingsList();
+                }
+
+                // when the first term come, the result is empty,
+                // give the first term's posting list to it
+                if (result == null){
+                    result = postingsList;
+                } else {
+                    result = phrase(result, postingsList);
+                }
+
+            }
+
+            return result;
         }
 
         return null;
@@ -133,14 +164,69 @@ public class Searcher {
                 i++;
                 j++;
             }
-            // the docIDs are in descending order,
             else if (doc_i > doc_j){
+                // the docIDs are in descending order,
                 i++;
             }
             else {
                 j++;
             }
         }
+
+        return result;
+    }
+
+    public PostingsList phrase(PostingsList pl1, PostingsList pl2){
+        PostingsList result = new PostingsList();
+
+        int i = 0, j =0;
+        while (i < pl1.size() && j < pl2.size()){
+
+            if (pl1.get(i).docID == pl2.get(j).docID){
+                int m = 0, n = 0;
+                Collections.sort(pl1.get(i).offsets);
+                Collections.sort(pl2.get(j).offsets);
+                while (m < pl1.get(i).offsets.size() && n < pl2.get(j).offsets.size()){
+                    int offset_1 = pl1.get(i).offsets.get(m), offset_2 = pl2.get(j).offsets.get(n);
+
+                    if (offset_2 == offset_1 + 1){
+                        // if docIDs are the same and offset are nearby, insert it into result
+                        result.add(new PostingsEntry(pl1.get(i).docID, offset_2));
+                        break;
+                    }
+                    else if (offset_2 > offset_1 + 1){
+                        /// the offsets are in ascending order,
+                        m++;
+                    }
+                    else {
+                        n++;
+                    }
+                }
+
+                i++;
+                j++;
+            }
+            else  if (pl1.get(i).docID > pl2.get(j).docID){
+                i++;
+            }
+            else {
+                j++;
+            }
+        }
+
+//        for (int k = 0; k < result.size(); k++){
+//            System.out.print(result.get(k).docID + ",");
+//        }
+//        System.out.println("|****************|");
+
+//        for (int p = 0; p < result.size(); p++){
+//            System.out.print(result.get(p).docID + ": ");
+//            for(int q = 0; q < result.get(p).offsets.size(); q++){
+//                System.out.print(result.get(p).offsets.get(q) + ",");
+//            }
+//            System.out.println();
+//        }
+//        System.out.println("|****************|");
 
         return result;
     }
