@@ -1,0 +1,15 @@
+// task 1.5
+1 Student_Organizations.f 0                                    // this document talks about student_oganizations, has no relevent to graduate program mathematics
+1 Private_Tutoring.f 0                                         // this document givs informations of local private tutors, has nothing to do with graduate program mathematics
+1 Mathematics.f 3                                              // this document is just about graduate program mathematics, it introduces a lot of information about the program
+
+precision = 15 / 22 = 68.18%
+recall = 15 / 100 = 15.00%
+
+
+// task 1.6
+// mathematics UC Davis education
+precision = 7 / 18 = 38.89%
+
+// education mathematics graduate davis
+precision = 6 / 12 = 50.00%
