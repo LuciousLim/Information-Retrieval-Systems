@@ -8,11 +8,12 @@
 package ir;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
-public class PostingsList implements Cloneable{
+public class PostingsList {
     
     /** The postings list */
-    private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
+    private final ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
 
     public ArrayList<PostingsEntry> getList(){
         return list;
@@ -82,5 +83,99 @@ public class PostingsList implements Cloneable{
     // 
     //  YOUR CODE HERE
     //
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        for (PostingsEntry entry : list) {
+            s.append(entry.toString()).append(";");
+        }
+        s.deleteCharAt(s.length() - 1);
+        s.append("\n");
+        return s.toString();
+    }
+
+    public static PostingsList decode(String s) {
+        String[] entries = s.split(";");
+        PostingsList postingsList = new PostingsList();
+        for (String entry : entries) {
+            String[] parts = entry.split(":");
+
+
+            try {
+                int docID = Integer.parseInt(parts[0]);
+                String[] offsetsAndScore = parts[1].split(",");
+                PostingsEntry newEntry = new PostingsEntry(docID);
+
+                if (offsetsAndScore.length < 2) {
+                    return null;
+                } else {
+                    int[] offsets = new int[offsetsAndScore.length - 1];
+                    for (int i = 0; i < offsetsAndScore.length - 1; i++) {
+                        offsets[i] = Integer.parseInt(offsetsAndScore[i]);
+                    }
+                    for (int offset : offsets) {
+                        newEntry.addOffset(offset);
+                        newEntry.score++;
+                    }
+                    double score = Double.parseDouble(offsetsAndScore[offsetsAndScore.length - 1]);
+                    newEntry.score = score;
+                }
+
+                // add the complete entry to the postings list
+                postingsList.add(newEntry);
+
+            } catch (NumberFormatException e) {
+                System.err.println("Error parsing postings list: " + s);
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+//            try {
+//                int docID = Integer.parseInt(parts[0]);
+//                String[] offsets = parts[1].split(",");
+//                PostingsEntry newEntry = new PostingsEntry(docID);
+//
+//                // iterate over each offset and add to the entry
+//                for (int i = 0; i < offsets.length; i++) {
+//                    newEntry.addOffset(Integer.parseInt(offsets[i].trim()));
+//                    newEntry.score++;
+//                }
+//
+//                // add the complete entry to the postings list
+//                postingsList.add(newEntry);
+//
+//            } catch (NumberFormatException e) {
+//                // handle parsing errors
+//                System.err.println("Error parsing postings list: " + s);
+//                e.printStackTrace();
+//                System.exit(1);
+//            }
+        }
+
+        return postingsList;
+    }
+
+//    public static PostingsList decode(String s) {
+//        PostingsList postingsList = new PostingsList();
+//        String[] entries = s.split(";");
+//        for (String entry : entries) {
+//            String[] parts = entry.split(":");
+//            try {
+//                int docID = Integer.parseInt(parts[0]);
+//                String[] offsets = parts[1].split(",");
+//                postingsList.add(new PostingsEntry(docID, 1, Integer.parseInt(offsets[0])));
+//                for (int i = 1; i < offsets.length - 1; i++) {
+//                    postingsList.get(postingsList.size() - 1).offsets.add(Integer.parseInt(offsets[i]));
+//                    postingsList.get(postingsList.size() - 1).score++;
+//                }
+//            } catch (NumberFormatException e) {
+//                System.err.println("Error parsing postings list: " + s);
+//                e.printStackTrace();
+//                System.exit(1);
+//            }
+//        }
+//        return postingsList;
+//    }
 }
 
