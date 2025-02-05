@@ -250,7 +250,7 @@ public class PersistentHashedIndex implements Index {
             writeDocInfo();
 
             // Write the dictionary and the postings list
-            collisions = write2Dict(collisions);
+            collisions = write2DictAndData(collisions);
         } catch ( IOException e ) {
             e.printStackTrace();
         }
@@ -261,7 +261,7 @@ public class PersistentHashedIndex implements Index {
         return Math.abs(key.hashCode()) % TABLESIZE;
     }
 
-    protected int write2Dict(int numOfCollisions) throws IOException {
+    protected int write2DictAndData(int numOfCollisions) throws IOException {
         // clear the file content
         dictionaryFile.setLength(0);
         // cet the file length to TABLE_SIZE * Entry.BYTES to reserve space

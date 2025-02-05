@@ -130,52 +130,9 @@ public class PostingsList {
                 e.printStackTrace();
                 System.exit(1);
             }
-
-//            try {
-//                int docID = Integer.parseInt(parts[0]);
-//                String[] offsets = parts[1].split(",");
-//                PostingsEntry newEntry = new PostingsEntry(docID);
-//
-//                // iterate over each offset and add to the entry
-//                for (int i = 0; i < offsets.length; i++) {
-//                    newEntry.addOffset(Integer.parseInt(offsets[i].trim()));
-//                    newEntry.score++;
-//                }
-//
-//                // add the complete entry to the postings list
-//                postingsList.add(newEntry);
-//
-//            } catch (NumberFormatException e) {
-//                // handle parsing errors
-//                System.err.println("Error parsing postings list: " + s);
-//                e.printStackTrace();
-//                System.exit(1);
-//            }
         }
 
         return postingsList;
     }
-
-//    public static PostingsList decode(String s) {
-//        PostingsList postingsList = new PostingsList();
-//        String[] entries = s.split(";");
-//        for (String entry : entries) {
-//            String[] parts = entry.split(":");
-//            try {
-//                int docID = Integer.parseInt(parts[0]);
-//                String[] offsets = parts[1].split(",");
-//                postingsList.add(new PostingsEntry(docID, 1, Integer.parseInt(offsets[0])));
-//                for (int i = 1; i < offsets.length - 1; i++) {
-//                    postingsList.get(postingsList.size() - 1).offsets.add(Integer.parseInt(offsets[i]));
-//                    postingsList.get(postingsList.size() - 1).score++;
-//                }
-//            } catch (NumberFormatException e) {
-//                System.err.println("Error parsing postings list: " + s);
-//                e.printStackTrace();
-//                System.exit(1);
-//            }
-//        }
-//        return postingsList;
-//    }
 }
 
