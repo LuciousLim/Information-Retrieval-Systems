@@ -19,6 +19,9 @@
 // URI
 https?:\/\/[^\s<>{}|\\"']+
 
+// Dollar$
+\b\$\d+([-,\.]\d+)+\b
+
 // Combined number
 \b\d+([-,\.]\d+)+\b
 
@@ -30,9 +33,6 @@ https?:\/\/[^\s<>{}|\\"']+
 
 // Compound word (xxxx-xxxx)
 \w+-\w+
-
-// Dollar$
-\$\d+
 
 // xx'xx
 \b\w+'+\w+\b
@@ -54,6 +54,7 @@ https?:\/\/[^\s<>{}|\\"']+
 
 // Twenty-four seven
 \d+/\d+
+
 
 
 

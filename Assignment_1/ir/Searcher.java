@@ -164,8 +164,8 @@ public class Searcher {
                 i++;
                 j++;
             }
-            else if (doc_i > doc_j){
-                // the docIDs are in descending order,
+            else if (doc_i < doc_j){
+                // the docIDs are in ascending order,
                 i++;
             }
             else {
@@ -183,30 +183,36 @@ public class Searcher {
         while (i < pl1.size() && j < pl2.size()){
 
             if (pl1.get(i).docID == pl2.get(j).docID){
-                int m = 0, n = 0;
-                Collections.sort(pl1.get(i).offsets);
-                Collections.sort(pl2.get(j).offsets);
-                while (m < pl1.get(i).offsets.size() && n < pl2.get(j).offsets.size()){
-                    int offset_1 = pl1.get(i).offsets.get(m), offset_2 = pl2.get(j).offsets.get(n);
-
-                    if (offset_2 == offset_1 + 1){
-                        // if docIDs are the same and offset are nearby, insert it into result
-                        result.add(new PostingsEntry(pl1.get(i).docID, offset_2));
-                        break;
-                    }
-                    else if (offset_2 > offset_1 + 1){
-                        /// the offsets are in ascending order,
-                        m++;
-                    }
-                    else {
-                        n++;
+//                int m = 0, n = 0;
+//                Collections.sort(pl1.get(i).offsets);
+//                Collections.sort(pl2.get(j).offsets);
+//                while (m < pl1.get(i).offsets.size() && n < pl2.get(j).offsets.size()){
+//                    int offset_1 = pl1.get(i).offsets.get(m), offset_2 = pl2.get(j).offsets.get(n);
+//
+//                    if (offset_2 == offset_1 + 1){
+//                        // if docIDs are the same and offset are nearby, insert it into result
+//                        result.add(new PostingsEntry(pl1.get(i).docID, offset_2));
+//                        break;
+//                    }
+//                    else if (offset_1 + 1 < offset_2){
+//                        // the offsets are in ascending order,
+//                        m++;
+//                    }
+//                    else {
+//                        n++;
+//                    }
+//                }
+                for (int m = 0; m < pl1.get(i).offsets.size(); m++){
+                    for (int n = 0; n < pl2.get(j).offsets.size(); n++){
+                        if (pl1.get(i).offsets.get(m) + 1 == pl2.get(j).offsets.get(n)){
+                            result.add(new PostingsEntry(pl2.get(j).docID, pl2.get(j).offsets.get(n)));
+                        }
                     }
                 }
-
                 i++;
                 j++;
             }
-            else  if (pl1.get(i).docID > pl2.get(j).docID){
+            else  if (pl1.get(i).docID < pl2.get(j).docID){
                 i++;
             }
             else {

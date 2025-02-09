@@ -59,7 +59,7 @@ public class PostingsList {
     }
 
 
-    /** Insert element in descending order*/
+    /** Insert element in ascending order*/
     public void add(PostingsEntry postingsEntry) {
         if(size() > 0){
             for(int i = 0; i < size(); i++){
@@ -67,8 +67,8 @@ public class PostingsList {
                 if (postingsEntry.docID == list.get(i).docID){
                     return;
                 }
-                // move the cursor until it can not find an element that is smaller than it
-                else if (postingsEntry.docID > list.get(i).docID){
+                // move the cursor until it can not find an element that is bigger than it
+                else if (postingsEntry.docID < list.get(i).docID){
                     list.add(i, postingsEntry);
                     return;
                 }
