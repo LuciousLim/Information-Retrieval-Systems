@@ -205,7 +205,9 @@ public class Searcher {
                 for (int m = 0; m < pl1.get(i).offsets.size(); m++){
                     for (int n = 0; n < pl2.get(j).offsets.size(); n++){
                         if (pl1.get(i).offsets.get(m) + 1 == pl2.get(j).offsets.get(n)){
-                            result.add(new PostingsEntry(pl2.get(j).docID, pl2.get(j).offsets.get(n)));
+//                            result.add(new PostingsEntry(pl2.get(j).docID, pl2.get(j).offsets.get(n)));
+                            result.add(pl2.get(j).docID, pl2.get(j).offsets.get(n));
+                            break;
                         }
                     }
                 }
@@ -219,20 +221,6 @@ public class Searcher {
                 j++;
             }
         }
-
-//        for (int k = 0; k < result.size(); k++){
-//            System.out.print(result.get(k).docID + ",");
-//        }
-//        System.out.println("|****************|");
-
-//        for (int p = 0; p < result.size(); p++){
-//            System.out.print(result.get(p).docID + ": ");
-//            for(int q = 0; q < result.get(p).offsets.size(); q++){
-//                System.out.print(result.get(p).offsets.get(q) + ",");
-//            }
-//            System.out.println();
-//        }
-//        System.out.println("|****************|");
 
         return result;
     }

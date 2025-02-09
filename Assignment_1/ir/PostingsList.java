@@ -80,6 +80,14 @@ public class PostingsList {
             list.add(postingsEntry);
         }
     }
+
+    public void add(int docID, int offset){
+        if (isContainById(docID)){
+            getById(docID).addOffset(offset);
+        } else {
+            list.add(new PostingsEntry(docID, offset));
+        }
+    }
     // 
     //  YOUR CODE HERE
     //
