@@ -10,6 +10,8 @@ package ir;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  *  Searches an index for results of a query.
@@ -35,13 +37,15 @@ public class Searcher {
     public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normType ) {
 
         // task 1.2, single word search
-        if(query.queryterm.size() == 1){
-            if (rankingType == RankingType.TF_IDF){
-                PostingsList result = this.index.getPostings(query.queryterm.get(0).term);
-                return Ranking.cosineScore(query, result, index, "n", "t");
-            }   else {
-                return this.index.getPostings(query.queryterm.get(0).term);
-            }
+        if(query.queryterm.size() == 1 && !queryType.equals(QueryType.RANKED_QUERY)){
+//            if (queryType.equals(QueryType.RANKED_QUERY)){
+//                PostingsList result = this.index.getPostings(query.queryterm.get(0).term);
+//                return rank(query, result, index, "n", "t", RankingType.TF_IDF);
+//            } else {
+//                return this.index.getPostings(query.queryterm.get(0).term);
+//            }
+
+            return this.index.getPostings(query.queryterm.get(0).term);
         }
 
         // task 1.3, intersect search
@@ -98,6 +102,11 @@ public class Searcher {
             return result;
         }
 
+        else if (queryType.equals(QueryType.RANKED_QUERY)){
+            PostingsList result = rankSearch(query, index);
+            return rank(query, result, index, "n", "t", RankingType.TF_IDF);
+        }
+
         return null;
     }
 
@@ -152,6 +161,36 @@ public class Searcher {
         }
 
         return result;
+    }
+
+    public PostingsList rankSearch(Query query, Index index){
+        ArrayList<PostingsEntry> result = null;
+
+        for (Query.QueryTerm t : query.queryterm){
+            if (result == null){
+                result = index.getPostings(t.term).getList();
+            }   else {
+                result = (ArrayList<PostingsEntry>) Stream.concat(result.stream(), index.getPostings(t.term).getList().stream())
+                        .distinct()
+                        .collect(Collectors.toList());
+            }
+        }
+
+        PostingsList postingsList = new PostingsList();
+        if (result != null){
+            for (PostingsEntry e : result){
+                postingsList.add(e);
+            }
+        }
+
+        return postingsList;
+    }
+    public PostingsList rank(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme, RankingType type ){
+        return switch (type){
+            case TF_IDF -> Ranking.tf_idf(query, postingsList, index, tf_scheme, df_scheme);
+            case PAGERANK -> null;
+            case COMBINATION -> null;
+        };
     }
 
 }

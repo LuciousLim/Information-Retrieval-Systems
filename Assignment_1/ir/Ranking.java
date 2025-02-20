@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Ranking {
+    public static PostingsList tf_idf(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){
+        return cosineScore(query, postingsList, index, tf_scheme, df_scheme);
+    }
+
     public static PostingsList cosineScore(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){
         ArrayList<Double> score = new ArrayList<>(Collections.nCopies(postingsList.size(), 0.0));
-        ArrayList<Double> length = new ArrayList<>(postingsList.size());
         ArrayList<Integer> tftds = new ArrayList<>();
 
         for (Query.QueryTerm t : query.queryterm){
@@ -29,7 +32,6 @@ public class Ranking {
         }
 
         for (int d = 0; d < postingsList.size(); d++){
-//            score.set(d, score.get(d) / index.docLengths.get(postingsList.get(d).docID));
             postingsList.get(d).score = score.get(d) / index.docLengths.get(postingsList.get(d).docID);
         }
 
