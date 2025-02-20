@@ -63,6 +63,10 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         return s.toString();
     }
 
+    public int getTf(){
+        return offsets.size();
+    }
+
 
     //
     // YOUR CODE HERE

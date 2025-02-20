@@ -36,7 +36,12 @@ public class Searcher {
 
         // task 1.2, single word search
         if(query.queryterm.size() == 1){
-            return this.index.getPostings(query.queryterm.get(0).term);
+            if (rankingType == RankingType.TF_IDF){
+                PostingsList result = this.index.getPostings(query.queryterm.get(0).term);
+                return Ranking.cosineScore(query, result, index, "n", "t");
+            }   else {
+                return this.index.getPostings(query.queryterm.get(0).term);
+            }
         }
 
         // task 1.3, intersect search
@@ -96,62 +101,6 @@ public class Searcher {
         return null;
     }
 
-//    public List<PostingsList> extractPostingLists(Query query){
-//        List<PostingsList> postingsLists = new ArrayList<>();
-//        if (query.queryterm.size() > 1) {
-//            for (int i = 0; i < query.queryterm.size(); i++) {
-//                postingsLists.add(this.index.getPostings((query.queryterm.get(i).term)));
-//            }
-//        }
-//        return postingsLists;
-//    }
-
-//    public PostingsList intersection(List<PostingsList> postingsLists){
-//        if (postingsLists == null || postingsLists.size() < 2) {
-//            return new PostingsList();
-//        }
-//
-//        PostingsList result = new PostingsList();
-//        PostingsList comparingList = new PostingsList();
-//        int left = 0, right = 1;
-//
-//        while (left < postingsLists.size() && right < postingsLists.size()) {
-//            if (postingsLists.size() >= 2){
-//                if (left == 0){
-//                    comparingList.copy(postingsLists.get(left));
-//                }
-//                else if (result.size() != 0){
-//                    comparingList.clearList();
-//                    comparingList.copy(result);
-//                    result.clearList();
-//                }
-//                else {
-//                    return null;
-//                }
-//
-//                int i = 0, j = 0;
-//                while (i < comparingList.size() && j < postingsLists.get(right).size()){
-//                    int doc_i = comparingList.get(i).docID, doc_j = postingsLists.get(right).get(j).docID;
-//                    if (doc_i == doc_j){
-//                        result.add(new PostingsEntry(doc_i));
-//                        i++;
-//                        j++;
-//                    }
-//                    else if (doc_i > doc_j){
-//                        i++;
-//                    }
-//                    else {
-//                        j++;
-//                    }
-//                }
-//
-//                left++;
-//                right++;
-//            }
-//        }
-//
-//        return result;
-//    }
 
     public PostingsList intersect(PostingsList pl1, PostingsList pl2){
         PostingsList result = new PostingsList();
@@ -183,29 +132,9 @@ public class Searcher {
         while (i < pl1.size() && j < pl2.size()){
 
             if (pl1.get(i).docID == pl2.get(j).docID){
-//                int m = 0, n = 0;
-//                Collections.sort(pl1.get(i).offsets);
-//                Collections.sort(pl2.get(j).offsets);
-//                while (m < pl1.get(i).offsets.size() && n < pl2.get(j).offsets.size()){
-//                    int offset_1 = pl1.get(i).offsets.get(m), offset_2 = pl2.get(j).offsets.get(n);
-//
-//                    if (offset_2 == offset_1 + 1){
-//                        // if docIDs are the same and offset are nearby, insert it into result
-//                        result.add(new PostingsEntry(pl1.get(i).docID, offset_2));
-//                        break;
-//                    }
-//                    else if (offset_1 + 1 < offset_2){
-//                        // the offsets are in ascending order,
-//                        m++;
-//                    }
-//                    else {
-//                        n++;
-//                    }
-//                }
                 for (int m = 0; m < pl1.get(i).offsets.size(); m++){
                     for (int n = 0; n < pl2.get(j).offsets.size(); n++){
                         if (pl1.get(i).offsets.get(m) + 1 == pl2.get(j).offsets.get(n)){
-//                            result.add(new PostingsEntry(pl2.get(j).docID, pl2.get(j).offsets.get(n)));
                             result.add(pl2.get(j).docID, pl2.get(j).offsets.get(n));
                             break;
                         }
@@ -224,6 +153,5 @@ public class Searcher {
 
         return result;
     }
-
 
 }
