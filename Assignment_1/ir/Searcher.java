@@ -9,6 +9,7 @@ package ir;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -169,10 +170,11 @@ public class Searcher {
         for (Query.QueryTerm t : query.queryterm){
             if (result == null){
                 result = index.getPostings(t.term).getList();
-            }   else {
-                result = (ArrayList<PostingsEntry>) Stream.concat(result.stream(), index.getPostings(t.term).getList().stream())
-                        .distinct()
-                        .collect(Collectors.toList());
+            }
+            else if (index.getPostings(t.term) != null){
+                    result = (ArrayList<PostingsEntry>) Stream.concat(result.stream(), index.getPostings(t.term).getList().stream())
+                            .distinct()
+                            .collect(Collectors.toList());
             }
         }
 
