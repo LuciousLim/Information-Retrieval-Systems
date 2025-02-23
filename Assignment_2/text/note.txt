@@ -1,0 +1,6 @@
+1 Math.f                    // This document contains a link that redirects to somewhere else, from the name of the link I suppose it is farily relevent to the content
+
+23 Evelyn_Silvia.f 3        // This document mainly talks about professor Evelyn_Silvia, but considering Silvia is a professor of Mathematics Department and had given great ideas about education in Mathematics, I score this document 3 pts
+
+29 Mathematics_ArXiv_front.f 3      // This document gives information about a great tool for Mathematics, but it is not so relevent to key word "graduate"
+
