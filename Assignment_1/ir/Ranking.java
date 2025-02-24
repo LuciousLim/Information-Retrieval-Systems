@@ -1,12 +1,68 @@
 package ir;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.io.*;
+import java.util.*;
 
 public class Ranking {
+    public static final double A = 0.5;
+    public static double B = 1000;
     public static PostingsList tf_idf(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){
         return cosineScore(query, postingsList, index, tf_scheme, df_scheme);
+    }
+
+    public static PostingsList pageRank(PostingsList postingsList, Index index){
+        PostingsList rankedList = new PostingsList();
+        HashMap<String, Double> pages = new HashMap<>();
+
+        try (BufferedReader file = new BufferedReader(new FileReader("index/pagerank.txt"))) {
+            String line;
+
+            while ((line = file.readLine()) != null) {
+                String[] arr = line.split(" ", 2);
+                if (arr.length == 2) {
+                    pages.put(arr[0], Double.parseDouble(arr[1]));
+                }
+            }
+
+//            for (PostingsEntry e : postingsList.getList()){
+//                String docName = index.docNames.get(e.docID).substring("..\\davisWiki\\".length());
+//                while ((line = file.readLine()) != null) {
+//                    String[] arr = line.split(" ", 2);
+//                    if (arr.length == 2) {
+//                        pages.put(arr[0], Double.parseDouble(arr[1]));
+//                    }
+//                }
+//            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (PostingsEntry e : postingsList.getList()){
+            String docName = index.docNames.get(e.docID).substring("..\\davisWiki\\".length());
+            rankedList.add(new PostingsEntry(e.docID, pages.get(docName)));
+        }
+
+        Collections.sort(rankedList.getList());
+        return rankedList;
+    }
+
+    public static PostingsList combination(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){
+        PostingsList tf_idf_list = cosineScore(query, postingsList, index, tf_scheme, df_scheme);
+        PostingsList page_list = pageRank(postingsList, index);
+        PostingsList combinedList = new PostingsList();
+
+        for (PostingsEntry t : tf_idf_list.getList()){
+            for (PostingsEntry p : page_list.getList()){
+                if (t.docID == p.docID){
+                    combinedList.add(new PostingsEntry(p.docID, A * t.score + B * p.score));
+                }
+            }
+        }
+
+        Collections.sort(combinedList.getList());
+
+        return combinedList;
     }
 
     public static PostingsList cosineScore(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){
@@ -72,4 +128,6 @@ public class Ranking {
             default -> -1.0;
         };
     }
+
+
 }

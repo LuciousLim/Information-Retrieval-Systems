@@ -7,6 +7,7 @@
 
 package ir;
 
+import javax.management.relation.RelationNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,13 +40,6 @@ public class Searcher {
 
         // task 1.2, single word search
         if(query.queryterm.size() == 1 && !queryType.equals(QueryType.RANKED_QUERY)){
-//            if (queryType.equals(QueryType.RANKED_QUERY)){
-//                PostingsList result = this.index.getPostings(query.queryterm.get(0).term);
-//                return rank(query, result, index, "n", "t", RankingType.TF_IDF);
-//            } else {
-//                return this.index.getPostings(query.queryterm.get(0).term);
-//            }
-
             return this.index.getPostings(query.queryterm.get(0).term);
         }
 
@@ -105,7 +99,7 @@ public class Searcher {
 
         else if (queryType.equals(QueryType.RANKED_QUERY)){
             PostingsList result = rankSearch(query, index);
-            return rank(query, result, index, "n", "t", RankingType.TF_IDF);
+            return rank(query, result, index, "n", "t", rankingType);
         }
 
         return null;
@@ -190,8 +184,8 @@ public class Searcher {
     public PostingsList rank(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme, RankingType type ){
         return switch (type){
             case TF_IDF -> Ranking.tf_idf(query, postingsList, index, tf_scheme, df_scheme);
-            case PAGERANK -> null;
-            case COMBINATION -> null;
+            case PAGERANK -> Ranking.pageRank(postingsList, index);
+            case COMBINATION -> Ranking.combination(query, postingsList, index, tf_scheme, df_scheme);
         };
     }
 
