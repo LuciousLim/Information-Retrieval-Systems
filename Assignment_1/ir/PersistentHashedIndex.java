@@ -212,7 +212,7 @@ public class PersistentHashedIndex implements Index {
         FileOutputStream fout = new FileOutputStream( INDEXDIR + "/docInfo" );
         for ( Map.Entry<Integer,String> entry : docNames.entrySet() ) {
             Integer key = entry.getKey();
-            String docInfoEntry = key + ";" + entry.getValue() + ";" + docLengths.get(key) + "\n";
+            String docInfoEntry = key + ";" + entry.getValue() + ";" + docLengths.get(key) + ";" + docLengths_Euclidean.get(key) + "\n";
             fout.write( docInfoEntry.getBytes() );
         }
         fout.close();
@@ -234,6 +234,7 @@ public class PersistentHashedIndex implements Index {
                 String[] data = line.split(";");
                 docNames.put( new Integer(data[0]), data[1] );
                 docLengths.put( new Integer(data[0]), new Integer(data[2]) );
+                docLengths_Euclidean.put( new Integer(data[0]), new Double(data[3]) );
             }
         }
         freader.close();

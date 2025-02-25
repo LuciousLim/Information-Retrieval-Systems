@@ -29,6 +29,13 @@ public class Indexer {
     /** The patterns matching non-standard words (e-mail addresses, etc.) */
     String patterns_file;
 
+    public HashMap<Integer, HashMap<String, Integer>> doc_vector = new HashMap<>();
+
+    public HashMap<String, Integer> df_vector = new HashMap<>();
+
+
+
+
 
     /* ----------------------------------------------- */
 
@@ -52,7 +59,7 @@ public class Indexer {
      *  Tokenizes and indexes the file @code{f}. If <code>f</code> is a directory,
      *  all its files and subdirectories are recursively processed.
      */
-    public void processFiles( File f, boolean is_indexing ) {
+    public void processFiles( File f, boolean is_indexing) {
         // do not try to index fs that cannot be read
         if (is_indexing) {
             if ( f.canRead() ) {
@@ -64,10 +71,14 @@ public class Indexer {
                             processFiles( new File( f, fs[i] ), is_indexing );
                         }
                     }
-                } else {
+                }
+                else {
                     // First register the document and get a docID
                     int docID = generateDocID();
                     if ( docID%1000 == 0 ) System.err.println( "Indexed " + docID + " files" );
+                    HashMap<String, Integer> vector = new HashMap<>();
+                    HashMap<String, Boolean> df = new HashMap<>();
+
                     try {
                         Reader reader = new InputStreamReader( new FileInputStream(f), StandardCharsets.UTF_8 );
                         Tokenizer tok = new Tokenizer( reader, true, false, true, patterns_file );
@@ -75,14 +86,41 @@ public class Indexer {
                         while ( tok.hasMoreTokens() ) {
                             String token = tok.nextToken();
                             insertIntoIndex( docID, token, offset++ );
+                            vector.merge(token, 1, Integer::sum);
+                            df.putIfAbsent(token, true);
                         }
                         index.docNames.put( docID, f.getPath() );
                         index.docLengths.put( docID, offset );
+                        doc_vector.put(docID, vector);
+                        for (String token : df.keySet()){
+                            df_vector.merge(token, 1, Integer::sum);
+                        }
                         reader.close();
                     } catch ( IOException e ) {
                         System.err.println( "Warning: IOException during indexing." );
                     }
                 }
+//                else {
+//                    int docID = generateDocID();
+//                    if ( docID%1000 == 0 ) System.err.println( "Indexed " + docID + " files" );
+//                    HashMap<String, Integer> vector = new HashMap<>();
+//                    try {
+//                        Reader reader = new InputStreamReader( new FileInputStream(f), StandardCharsets.UTF_8 );
+//                        Tokenizer tok = new Tokenizer( reader, true, false, true, patterns_file );
+//                        int offset = 0;
+//                        while ( tok.hasMoreTokens() ) {
+//                            String token = tok.nextToken();
+//                            insertIntoIndex( docID, token, offset++ );
+//                            vector.merge(token, 1, Integer::sum);
+//                        }
+//                        index.docNames.put( docID, f.getPath() );
+//                        index.docLengths.put( docID, offset );
+//                        doc_vector.put(docID, vector);
+//                        reader.close();
+//                    } catch ( IOException e ) {
+//                        System.err.println( "Warning: IOException during indexing." );
+//                    }
+//                }
             }
         }
     }

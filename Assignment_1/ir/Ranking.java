@@ -6,8 +6,9 @@ import java.util.*;
 public class Ranking {
     public static final double A = 0.5;
     public static double B = 1000;
-    public static PostingsList tf_idf(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){
-        return cosineScore(query, postingsList, index, tf_scheme, df_scheme);
+    public static PostingsList tf_idf(Query query, PostingsList postingsList, Index index,
+                                      String tf_scheme, String df_scheme, NormalizationType normType){
+        return cosineScore(query, postingsList, index, tf_scheme, df_scheme, normType);
     }
 
     public static PostingsList pageRank(PostingsList postingsList, Index index){
@@ -47,8 +48,9 @@ public class Ranking {
         return rankedList;
     }
 
-    public static PostingsList combination(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){
-        PostingsList tf_idf_list = cosineScore(query, postingsList, index, tf_scheme, df_scheme);
+    public static PostingsList combination(Query query, PostingsList postingsList, Index index,
+                                           String tf_scheme, String df_scheme, NormalizationType normType){
+        PostingsList tf_idf_list = tf_idf(query, postingsList, index, tf_scheme, df_scheme, normType);
         PostingsList page_list = pageRank(postingsList, index);
         PostingsList combinedList = new PostingsList();
 
@@ -65,7 +67,8 @@ public class Ranking {
         return combinedList;
     }
 
-    public static PostingsList cosineScore(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){
+    public static PostingsList cosineScore(Query query, PostingsList postingsList, Index index,
+                                           String tf_scheme, String df_scheme, NormalizationType normType){
         ArrayList<Double> score = new ArrayList<>(Collections.nCopies(postingsList.size(), 0.0));
         ArrayList<HashMap<Integer, Integer>> tfs = new ArrayList<>();
         for (int i = 0; i < query.size(); i++) {
@@ -101,9 +104,16 @@ public class Ranking {
             }
         }
 
-        for (int doc = 0; doc < postingsList.size(); doc++){
-            postingsList.get(doc).score = score.get(doc) / index.docLengths.get(postingsList.get(doc).docID);
+        if (normType.equals(NormalizationType.NUMBER_OF_WORDS)){
+            for (int doc = 0; doc < postingsList.size(); doc++){
+                postingsList.get(doc).score = score.get(doc) / index.docLengths.get(postingsList.get(doc).docID);
+            }
+        } else {
+            for (int doc = 0; doc < postingsList.size(); doc++){
+                postingsList.get(doc).score = score.get(doc) / index.docLengths_Euclidean.get(postingsList.get(doc).docID);
+            }
         }
+
 
         Collections.sort(postingsList.getList());
 

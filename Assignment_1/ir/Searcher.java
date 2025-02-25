@@ -99,7 +99,7 @@ public class Searcher {
 
         else if (queryType.equals(QueryType.RANKED_QUERY)){
             PostingsList result = rankSearch(query, index);
-            return rank(query, result, index, "n", "t", rankingType);
+            return rank(query, result, index, "n", "t", rankingType, normType);
         }
 
         return null;
@@ -181,11 +181,12 @@ public class Searcher {
 
         return postingsList;
     }
-    public PostingsList rank(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme, RankingType type ){
+    public PostingsList rank(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme,
+                             RankingType type, NormalizationType normType ){
         return switch (type){
-            case TF_IDF -> Ranking.tf_idf(query, postingsList, index, tf_scheme, df_scheme);
+            case TF_IDF -> Ranking.tf_idf(query, postingsList, index, tf_scheme, df_scheme, normType);
             case PAGERANK -> Ranking.pageRank(postingsList, index);
-            case COMBINATION -> Ranking.combination(query, postingsList, index, tf_scheme, df_scheme);
+            case COMBINATION -> Ranking.combination(query, postingsList, index, tf_scheme, df_scheme, normType);
         };
     }
 

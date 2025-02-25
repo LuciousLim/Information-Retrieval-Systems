@@ -9,6 +9,8 @@ package ir;
 
 import java.util.ArrayList;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *  This is the main class for the search engine.
@@ -81,10 +83,23 @@ public class Engine {
             synchronized ( indexLock ) {
                 gui.displayInfoText( "Indexing, please wait..." );
                 long startTime = System.currentTimeMillis();
-                for ( int i=0; i<dirNames.size(); i++ ) {
-                    File dokDir = new File( dirNames.get( i ));
-                    indexer.processFiles( dokDir, is_indexing );
+
+                for (String dirName : dirNames) {
+                   File dokDir = new File(dirName);
+                    indexer.processFiles(dokDir, is_indexing);
                 }
+
+                for (Map.Entry<Integer, HashMap<String, Integer>> doc : indexer.doc_vector.entrySet()){
+                    double length = 0;
+                    for (Map.Entry<String, Integer> tok : doc.getValue().entrySet()){
+                        int tf = tok.getValue();
+                        double idf = Math.log((double) index.docNames.size() / indexer.df_vector.get(tok.getKey()));
+                        length += Math.pow(tf * idf, 2);
+                    }
+                    length = Math.sqrt(length);
+                    index.docLengths_Euclidean.put(doc.getKey(), length);
+                }
+
                 long elapsedTime = System.currentTimeMillis() - startTime;
                 gui.displayInfoText( String.format( "Indexing done in %.1f seconds.", elapsedTime/1000.0 ));
                 index.cleanup();
