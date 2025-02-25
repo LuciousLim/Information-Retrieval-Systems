@@ -49,6 +49,12 @@ public class PageRank {
      */
     final static double EPSILON = 0.0001;
 
+	Random rand = new Random();
+	double[] exactPageRank;
+	int[] visits;
+
+
+
 	class DocRank implements Comparable<DocRank> {
 		int index;
 		double rank;
@@ -71,6 +77,8 @@ public class PageRank {
     public PageRank( String filename ) {
 		int noOfDocs = readDocs( filename );
 		iterate( noOfDocs, 1000 );
+		monteCarlo( noOfDocs, 1000 );
+		Svwiki(20);
     }
 
 
@@ -212,8 +220,9 @@ public class PageRank {
 		}
 
 		long elapsedTime = System.currentTimeMillis() - startTime;
-		System.out.printf("Took %.2f seconds", (float) elapsedTime/1000);
+		System.out.printf("Took %.2f seconds%n", (float) elapsedTime/1000);
 
+		exactPageRank = a;
 		writePagerank(numberOfDocs, rankedDocs);
     }
 
@@ -244,6 +253,294 @@ public class PageRank {
 		}
 	}
 
+	public void monteCarlo(int numberOfDocs, int maxIterations) {
+		int m = 20;
+
+		System.out.println("\nMonte-Carlo 1:");
+		int simulations = 0;
+		int totalVisits = 0;
+		visits = new int[numberOfDocs];
+		long startTime1 = System.currentTimeMillis();
+		for (int i = 0; i < m; i++) {
+			totalVisits += mc1(numberOfDocs, maxIterations);
+			simulations++;
+			long elapsedTime = System.currentTimeMillis() - startTime1;
+			printMC(simulations, totalVisits, elapsedTime);
+		}
+
+		System.out.println("\nMonte-Carlo 2:");
+		simulations = 0;
+		totalVisits = 0;
+		visits = new int[numberOfDocs];
+		long startTime2 = System.currentTimeMillis();
+		for (int i = 0; i < m; i++) {
+			totalVisits += mc2(numberOfDocs, maxIterations);
+			simulations++;
+			long elapsedTime = System.currentTimeMillis() - startTime2;
+			printMC(simulations, totalVisits, elapsedTime);
+		}
+
+		System.out.println("\nMonte-Carlo 4:");
+		simulations = 0;
+		totalVisits = 0;
+		visits = new int[numberOfDocs];
+		long startTime4 = System.currentTimeMillis();
+		for (int i = 0; i < m; i++) {
+			totalVisits += mc4(numberOfDocs);
+			simulations++;
+			long elapsedTime = System.currentTimeMillis() - startTime4;
+			printMC(simulations, totalVisits, elapsedTime);
+		}
+
+		System.out.println("Top 30:");
+		double[] a = new double[numberOfDocs];
+		for (int i = 0; i < a.length; ++i) {
+			a[i] = (double) visits[i] / totalVisits;
+		}
+
+		List<DocRank> rankedDocsMC = new ArrayList<>();
+		for (int i = 0; i < numberOfDocs; i++) {
+			rankedDocsMC.add(new DocRank(i, a[i]));
+		}
+		Collections.sort(rankedDocsMC);
+
+		System.out.println("\nSorted PageRank Results:");
+		for (int i = 0; i < 30; i++) {
+			System.out.printf("Document: %-30s PageRank: %.5f%n", docName[rankedDocsMC.get(i).index], rankedDocsMC.get(i).rank);
+		}
+
+		System.out.println("\nMonte-Carlo 5:");
+		simulations = 0;
+		totalVisits = 0;
+		visits = new int[numberOfDocs];
+		long startTime5 = System.currentTimeMillis();
+		for (int i = 0; i < m; i++) {
+			totalVisits += mc5(numberOfDocs);
+			simulations++;
+			long elapsedTime = System.currentTimeMillis() - startTime5;
+			printMC(simulations, totalVisits, elapsedTime);
+		}
+	}
+
+	/**
+	 * Perform n random walks among all nodes
+	 * Walks stop when the surfer gets bored or the maximum jumps are reached
+	 * Register the end point
+	 */
+	public int mc1(int numberOfDocs, int maxIterations) {
+		int totalVisits = 0;
+
+		for (int i = 0; i < numberOfDocs; i++) {
+			// Start the random walk from a random document
+			int cur = rand.nextInt(numberOfDocs);
+			int counter = 0;	// Counter to track the number of steps in the current random walk
+
+			while (counter < maxIterations) {
+				// With probability BORED, stop the walk
+				if (rand.nextDouble() < BORED) {
+					break;
+				}
+				// If no out links, jump to a random document
+				if (out[cur] == 0) {
+					cur = rand.nextInt(numberOfDocs);
+				} else {
+					// If there are outgoing links, randomly choose one to jump
+					int index = rand.nextInt(out[cur]);
+					cur = (int) link.get(cur).keySet().toArray()[index];
+				}
+				counter++;
+			}
+			visits[cur]++;
+			totalVisits++;
+		}
+
+		return totalVisits;
+	}
+
+	/**
+	 * Perform n random walks starting from each node
+	 * Walks stop when the surfer gets bored or the maximum jumps are reached
+	 * Register the end point
+	 */
+	public int mc2(int numberOfDocs, int maxIterations) {
+		int totalVisits	= 0;
+		for (int i = 0; i < numberOfDocs; i++) {
+			// Start the random walk from document i
+			int cur = i;
+			int counter = 0;
+
+			while (counter < maxIterations) {
+				// With probability BORED, stop the walk
+				if (rand.nextDouble() < BORED) {
+					break;
+				}
+				// If no out links, jump to a random document
+				if (out[cur] == 0) {
+					cur = rand.nextInt(numberOfDocs);
+				} else {
+					// If there are outgoing links, randomly choose one to jump
+					int index = rand.nextInt(out[cur]);
+					cur = (int) link.get(cur).keySet().toArray()[index];
+				}
+				counter++;
+			}
+			visits[cur]++;
+			totalVisits++;
+		}
+		return totalVisits;
+	}
+
+	/**
+	 * Perform n random walks starting from each node
+	 * Walks stop when the surfer gets bored or reaches the dangling node（node has no out link）
+	 * Register all nodes visited along the path
+	 */
+	public int mc4(int numberOfDocs) {
+		int totalVisits = 0;
+		for (int i = 0; i < numberOfDocs; i++) {
+			// Start the random walk from document i
+			int cur = i;
+			while (true) {
+				// Register all nodes visited along the path
+				totalVisits++;
+				visits[cur]++;
+				if (rand.nextDouble() < BORED) {
+					break;
+				}
+				if (out[cur] == 0) break;
+				int index = rand.nextInt(out[cur]);
+				cur = (int) link.get(cur).keySet().toArray()[index];
+			}
+		}
+		return totalVisits;
+	}
+
+	/**
+	 * Perform n random walks among all nodes
+	 * Walks stop when the surfer gets bored or reaches the dangling node（node has no out link）
+	 * Register all nodes visited along the path
+	 */
+	public int mc5(int numberOfDocs) {
+		int totalVisits = 0;
+		for (int i = 0; i < numberOfDocs; i++) {
+			// Start the random walk from document i
+			int cur = rand.nextInt(numberOfDocs);
+			while (true) {
+				// Register all nodes visited along the path
+				totalVisits++;
+				visits[cur]++;
+				if (rand.nextDouble() < BORED) {
+					break;
+				}
+				if (out[cur] == 0) break;
+				int index = rand.nextInt(out[cur]);
+				cur = (int) link.get(cur).keySet().toArray()[index];
+			}
+		}
+		return totalVisits;
+	}
+
+	public void printMC(int simulations, int totalVisits, long time){
+		double dif = 0;
+		for (int i = 0; i < visits.length; ++i) {
+			double estimatedPageRank = (double) visits[i] / totalVisits;
+			double delta = estimatedPageRank - exactPageRank[i];
+			dif += delta*delta;
+		}
+		System.out.printf("Simulations: %-30s Difference: %-30.9f Time: %.2f seconds%n", simulations, dif, (float) time / 1000);
+
+	}
+
+	public void Svwiki(int m){
+		link.clear();
+		out = new int[MAX_NUMBER_OF_DOCS];
+		int numberOfDocs = readDocs("linksSvwiki.txt");
+		visits = new int[numberOfDocs];
+		System.out.println("\nSvwiki:");
+		int totalVisits = 0;
+		for (int i = 0; i < m; i++) {
+			totalVisits += mc4(numberOfDocs);
+		}
+
+		List<DocRank> rankedSvwiki = new ArrayList<>();
+		for (int i = 0; i < numberOfDocs; i++) {
+			rankedSvwiki.add(new DocRank(i, (double) visits[i] / totalVisits));
+		}
+		Collections.sort(rankedSvwiki);
+
+		System.out.println("\nSorted PageRank Results:");
+		for (int i = 0; i < 30; i++) {
+			System.out.printf("Document: %-30s PageRank: %.15f%n", docName[rankedSvwiki.get(i).index], rankedSvwiki.get(i).rank);
+		}
+	}
+
+//	public void svWiki() {
+//		docNumber = new HashMap<String,Integer>();
+//		docName = new String[MAX_NUMBER_OF_DOCS];
+//		link = new HashMap<Integer,HashMap<Integer,Boolean>>();
+//		int numberOfDocs = readDocs("linksSvwiki.txt");
+//		out = new int[numberOfDocs];
+//		int totalVisits = 0;
+//		double[] x = new double[numberOfDocs];
+//		double[] xp = new double[numberOfDocs];
+//		Integer[] indeces = new Integer[numberOfDocs];
+//		for (Integer i = 0; i < numberOfDocs; ++i)
+//			indeces[i] = i;
+//		Integer[] indecesp = indeces.clone();
+//
+//		visits = new int[numberOfDocs];
+//		while (true) {
+//			totalVisits += mc4(numberOfDocs);
+//
+//			xp = x.clone();
+//			for (int i = 0; i < x.length; ++i) {
+//				x[i] = (double) visits[i] / totalVisits;
+//			}
+//			indecesp = indeces.clone();
+//			Arrays.sort(indeces, new Comparator<Integer>() {
+//						@Override
+//						public int compare(Integer a, Integer b) {
+//							return x[a] < x[b] ? 1 : x[a] == x[b] ? 0 : -1;
+//						}
+//					}
+//			);
+//			double norm2 = 0;
+//			for (int i = 0; i < 30; ++i) {
+//				double delta = x[indeces[i]] - xp[indeces[i]];
+//				norm2 += delta*delta;
+//			}
+//			boolean stable = true;
+//			for (int i = 0; i < 30; ++i) {
+//				stable = stable && indeces[i] == indecesp[i];
+//			}
+//			System.out.println("norm2: " + norm2 + ", top30 stable: " + stable);
+//
+//			if (norm2 < 1e-10 && stable) {
+//				System.out.println("Top30:");
+//				for (int i = 0; i < 30; ++i) {
+//					System.out.println(docName[indeces[i]] + ": " + x[indeces[i]]);
+//				}
+//				System.out.println();
+//				try {
+//					HashMap<String, String> realName = new HashMap<>();
+//					BufferedReader in = new BufferedReader( new FileReader("./svwikiTitles.txt"));
+//					String line;
+//					while ((line = in.readLine()) != null) {
+//						String[] arr = line.split(";");
+//						realName.put(arr[0], arr[1]);
+//					}
+//					in.close();
+//					for (int i = 0; i < 30; ++i) {
+//						System.out.println(realName.get(docName[indeces[i]]) + " " + x[indeces[i]]);
+//					}
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				break;
+//			}
+//		}
+//	}
     /* --------------------------------------------- */
 
 
