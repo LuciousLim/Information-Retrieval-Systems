@@ -78,7 +78,7 @@ public class PageRank {
 		int noOfDocs = readDocs( filename );
 		iterate( noOfDocs, 1000 );
 		monteCarlo( noOfDocs, 1000 );
-		Svwiki(20);
+		Svwiki(3);
     }
 
 
@@ -223,12 +223,12 @@ public class PageRank {
 		System.out.printf("Took %.2f seconds%n", (float) elapsedTime/1000);
 
 		exactPageRank = a;
-		writePagerank(numberOfDocs, rankedDocs);
+		writePagerank(numberOfDocs, rankedDocs, "./davisTitles.txt", "./pagerank.txt");
     }
 
-	void writePagerank(int numberOfDocs, List<DocRank> rankedDocs){
-		try (BufferedReader in = new BufferedReader(new FileReader("./davisTitles.txt"));
-			 BufferedWriter fw = new BufferedWriter(new FileWriter("./pagerank.txt"))) {
+	void writePagerank(int numberOfDocs, List<DocRank> rankedDocs, String titleFile, String targetFile){
+		try (BufferedReader in = new BufferedReader(new FileReader(titleFile));
+			 BufferedWriter fw = new BufferedWriter(new FileWriter(targetFile))) {
 
 			// Store the mapping between document IDs and their real names
 			Map<String, String> realName = new HashMap<>();
@@ -241,10 +241,11 @@ public class PageRank {
 					realName.put(arr[0].trim(), arr[1].trim());
 				}
 			}
-
+            
 			// Write the PageRank results to the output file
 			for (int i = 0; i < numberOfDocs; i++) {
-				String docTitle = realName.getOrDefault(docName[i], "Unknown Title");
+                int index = rankedDocs.get(i).index;
+				String docTitle = realName.getOrDefault(docName[index], "Unknown Title");
 				fw.write(String.format("%s %.9f%n", docTitle, rankedDocs.get(i).rank));
 			}
 
@@ -458,20 +459,45 @@ public class PageRank {
 		visits = new int[numberOfDocs];
 		System.out.println("\nSvwiki:");
 		int totalVisits = 0;
-		for (int i = 0; i < m; i++) {
-			totalVisits += mc4(numberOfDocs);
-		}
+		double diff = 1;
+		List<DocRank> newRank = new ArrayList<>(numberOfDocs);
+		double[] oldRank = new double[30];
 
-		List<DocRank> rankedSvwiki = new ArrayList<>();
-		for (int i = 0; i < numberOfDocs; i++) {
-			rankedSvwiki.add(new DocRank(i, (double) visits[i] / totalVisits));
+		while (diff > 1E-10){
+			diff = 0;
+			if (!newRank.isEmpty()){
+				for (int i = 0; i < 30; i ++){
+					oldRank[i] = newRank.get(i).rank;
+				}
+			}
+			newRank.clear();
+
+			// Use mc4 to iterate
+			for (int i = 0; i < m; i++) {
+				totalVisits += mc4(numberOfDocs);
+			}
+
+			// Compute difference
+			for (int i = 0; i < numberOfDocs; i++) {
+				newRank.add(new DocRank(i, (double) visits[i] / totalVisits));
+			}
+			Collections.sort(newRank);
+			for (int i = 0; i < 30; i++){
+				diff += Math.pow(newRank.get(i).rank - oldRank[i], 2) ;
+			}
+
+			System.out.printf("Difference: %-30s Target difference: %.10f%n", diff, 1E-9);
 		}
-		Collections.sort(rankedSvwiki);
 
 		System.out.println("\nSorted PageRank Results:");
 		for (int i = 0; i < 30; i++) {
-			System.out.printf("Document: %-30s PageRank: %.15f%n", docName[rankedSvwiki.get(i).index], rankedSvwiki.get(i).rank);
+			System.out.printf("Document: %-30s PageRank: %.15f%n", docName[newRank.get(i).index], newRank.get(i).rank);
 		}
+
+		writePagerank(numberOfDocs, newRank, "./svwikiTitles.txt", "./svwikiRank.txt");
+
+
+
 	}
 
 //	public void svWiki() {
