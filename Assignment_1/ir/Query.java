@@ -7,9 +7,7 @@
 
 package ir;
 
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-import java.util.Iterator;
+import java.util.*;
 import java.nio.charset.*;
 import java.io.*;
 
@@ -111,9 +109,58 @@ public class Query {
      *  @param engine The search engine object
      */
     public void relevanceFeedback( PostingsList results, boolean[] docIsRelevant, Engine engine ) {
-        //
-        //  YOUR CODE HERE
-        //
+        int relevantDocCount = 0;
+        HashMap<String, Integer> Dr_centroid = new HashMap<>();
+
+        for(int i = 0; i < docIsRelevant.length; i++){
+            if (docIsRelevant[i]){
+                HashMap<String, Integer> tf = getTfVector(engine.index.docNames.get(results.get(i).docID));
+                for (Map.Entry<String, Integer> entry : tf.entrySet()) {
+                    Dr_centroid.merge(entry.getKey(), entry.getValue(), Integer::sum);
+                }
+                relevantDocCount++;
+            }
+        }
+
+        if (relevantDocCount == 0)return;
+
+        // Adjust weights for existing query terms
+        for (QueryTerm queryTerm : queryterm) {
+            queryTerm.weight *= alpha;
+        }
+
+        for (QueryTerm queryTerm : queryterm) {
+            if (Dr_centroid.containsKey(queryTerm.term)) {
+                queryTerm.weight += beta * Dr_centroid.get(queryTerm.term) / relevantDocCount;
+                Dr_centroid.remove(queryTerm.term);
+            }
+        }
+
+        // Add new terms to query
+        for (String term : Dr_centroid.keySet()) {
+            queryterm.add(new QueryTerm(term, beta * Dr_centroid.get(term) / relevantDocCount));
+        }
+    }
+
+    /**
+     *  Returns a vector given a document name
+     */
+    public HashMap<String, Integer> getTfVector(String docName){
+        HashMap<String, Integer> tf = new HashMap<>();
+        File f = new File(docName);
+        String patterns_file = "patterns.txt";
+        try {
+            Reader reader = new InputStreamReader( new FileInputStream(f), StandardCharsets.UTF_8 );
+            Tokenizer tok = new Tokenizer( reader, true, false, true, patterns_file );
+            while ( tok.hasMoreTokens() ) {
+                String token = tok.nextToken();
+                if (tf.get(token) == null) tf.put(token, 0);
+                tf.merge(token, 1, Integer::sum);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return tf;
     }
 
     public String toString(){

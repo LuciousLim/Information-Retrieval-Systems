@@ -8,7 +8,8 @@ public class Ranking {
     public static double B = 1000;
     public static PostingsList tf_idf(Query query, PostingsList postingsList, Index index,
                                       String tf_scheme, String df_scheme, NormalizationType normType){
-        return cosineScore(query, postingsList, index, tf_scheme, df_scheme, normType);
+//        return cosineScore(query, postingsList, index, tf_scheme, df_scheme, normType);
+        return cosineScore(query, index, tf_scheme, df_scheme, normType);
     }
 
     public static PostingsList pageRank(PostingsList postingsList, Index index){
@@ -24,17 +25,6 @@ public class Ranking {
                     pages.put(arr[0], Double.parseDouble(arr[1]));
                 }
             }
-
-//            for (PostingsEntry e : postingsList.getList()){
-//                String docName = index.docNames.get(e.docID).substring("..\\davisWiki\\".length());
-//                while ((line = file.readLine()) != null) {
-//                    String[] arr = line.split(" ", 2);
-//                    if (arr.length == 2) {
-//                        pages.put(arr[0], Double.parseDouble(arr[1]));
-//                    }
-//                }
-//            }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -69,12 +59,14 @@ public class Ranking {
 
     public static PostingsList cosineScore(Query query, PostingsList postingsList, Index index,
                                            String tf_scheme, String df_scheme, NormalizationType normType){
+        System.out.println("Computing cos Start");
         ArrayList<Double> score = new ArrayList<>(Collections.nCopies(postingsList.size(), 0.0));
         ArrayList<HashMap<Integer, Integer>> tfs = new ArrayList<>();
         for (int i = 0; i < query.size(); i++) {
             tfs.add(new HashMap<>());
         }
 
+        System.out.println("Computing tf Start");
         // Compute tf
         for (int i = 0; i < query.size(); i++){
             PostingsList pl = index.getPostings(query.queryterm.get(i).term);
@@ -82,6 +74,8 @@ public class Ranking {
                 tfs.get(i).put(e.docID, e.getTf());
             }
         }
+
+        System.out.println("Computing tf Finish");
 
         for (int i = 0; i < query.queryterm.size(); i++){
             String term = query.queryterm.get(i).term;
@@ -118,6 +112,53 @@ public class Ranking {
         Collections.sort(postingsList.getList());
 
         return postingsList;
+    }
+
+    public static PostingsList cosineScore(Query query, Index index, String tf_scheme, String df_scheme, NormalizationType normType){
+        HashMap<Integer, Double> score = new HashMap<>();
+        PostingsList result = new PostingsList();
+
+        for (int i = 0; i < query.queryterm.size(); i++){
+            Query.QueryTerm queryTerm = query.queryterm.get(i);
+
+            // Compute qtf
+            double qtf = queryTerm.weight;
+
+            // Compute df
+            PostingsList pl = index.getPostings(queryTerm.term);
+            int df = pl.size();
+            double Wtq = calWeight(qtf, df, pl, index, tf_scheme, df_scheme);
+
+
+            for (PostingsEntry e : pl.getList()){
+                Integer docID = e.docID;
+                // Check if the current query term exists in the current document
+                double tf = e.getTf();
+                // Compute weight
+                double Wftd = calWeight(tf, df, pl, index, tf_scheme, df_scheme);
+                double weight = Wftd * Wtq;
+                score.merge(docID, weight, Double::sum);
+            }
+        }
+
+        if (normType == NormalizationType.NUMBER_OF_WORDS) {
+            for (Map.Entry<Integer, Double> entry : score.entrySet()) {
+                int docID = entry.getKey();
+                double normalizedScore = entry.getValue() / index.docLengths.get(docID);
+                result.add(new PostingsEntry(docID, normalizedScore));
+            }
+        } else {
+            for (Map.Entry<Integer, Double> entry : score.entrySet()) {
+                int docID = entry.getKey();
+                double normalizedScore = entry.getValue() / index.docLengths_Euclidean.get(docID);
+                result.add(new PostingsEntry(docID, normalizedScore));
+            }
+        }
+
+
+        Collections.sort(result.getList());
+
+        return result;
     }
 
     public static Double calWeight(double tf, int df, PostingsList postingsList, Index index, String tf_scheme, String df_scheme){

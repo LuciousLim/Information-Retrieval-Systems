@@ -306,8 +306,8 @@ public class SearchGUI extends JFrame {
         int i;
 
         for ( i=0; i<results.size() && i<maxResultsToDisplay; i++ ) {
-//            String fileName = displayableFileName(engine.index.docNames.get(results.get(i).docID));
-//
+            String fileName = displayableFileName(engine.index.docNames.get(results.get(i).docID));
+
 //            try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("output.txt"), StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
 //                writer.write(fileName);
 //                writer.newLine();

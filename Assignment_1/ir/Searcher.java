@@ -8,10 +8,7 @@
 package ir;
 
 import javax.management.relation.RelationNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -98,7 +95,8 @@ public class Searcher {
         }
 
         else if (queryType.equals(QueryType.RANKED_QUERY)){
-            PostingsList result = rankSearch(query, index);
+//            PostingsList result = rankSearch(query, index);
+            PostingsList result = new PostingsList();
             return rank(query, result, index, "n", "t", rankingType, normType);
         }
 
@@ -158,29 +156,27 @@ public class Searcher {
         return result;
     }
 
-    public PostingsList rankSearch(Query query, Index index){
-        ArrayList<PostingsEntry> result = null;
+    public PostingsList rankSearch(Query query, Index index) {
+        System.out.println("1 Start");
 
-        for (Query.QueryTerm t : query.queryterm){
-            if (result == null){
-                result = index.getPostings(t.term).getList();
-            }
-            else if (index.getPostings(t.term) != null){
-                    result = (ArrayList<PostingsEntry>) Stream.concat(result.stream(), index.getPostings(t.term).getList().stream())
-                            .distinct()
-                            .collect(Collectors.toList());
+        Set<PostingsEntry> resultSet = new HashSet<>();
+
+        for (Query.QueryTerm t : query.queryterm) {
+            PostingsList postings = index.getPostings(t.term);
+            if (postings != null) {
+                resultSet.addAll(postings.getList());
             }
         }
 
         PostingsList postingsList = new PostingsList();
-        if (result != null){
-            for (PostingsEntry e : result){
-                postingsList.add(e);
-            }
+        for (PostingsEntry entry : resultSet) {
+            postingsList.add(entry);
         }
 
+        System.out.println("1 End");
         return postingsList;
     }
+
     public PostingsList rank(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme,
                              RankingType type, NormalizationType normType ){
         return switch (type){
