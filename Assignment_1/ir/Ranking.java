@@ -8,8 +8,12 @@ public class Ranking {
     public static double B = 1000;
     public static PostingsList tf_idf(Query query, PostingsList postingsList, Index index,
                                       String tf_scheme, String df_scheme, NormalizationType normType){
-//        return cosineScore(query, postingsList, index, tf_scheme, df_scheme, normType);
-        return cosineScore(query, index, tf_scheme, df_scheme, normType);
+        return cosineScore(query, postingsList, index, tf_scheme, df_scheme, normType);
+    }
+
+    public static PostingsList tf_idf(Query query, PostingsList[] pls, Index index,
+                                      String tf_scheme, String df_scheme, NormalizationType normType, KGramIndex kgIndex){
+        return cosineScore(query, pls, index, tf_scheme, df_scheme, normType, kgIndex);
     }
 
     public static PostingsList pageRank(PostingsList postingsList, Index index){
@@ -114,18 +118,43 @@ public class Ranking {
         return postingsList;
     }
 
-    public static PostingsList cosineScore(Query query, Index index, String tf_scheme, String df_scheme, NormalizationType normType){
+    public static PostingsList cosineScore(Query query, PostingsList[] pls, Index index, String tf_scheme, String df_scheme, NormalizationType normType, KGramIndex kgIndex){
         HashMap<Integer, Double> score = new HashMap<>();
         PostingsList result = new PostingsList();
 
         for (int i = 0; i < query.queryterm.size(); i++){
             Query.QueryTerm queryTerm = query.queryterm.get(i);
-
+            ArrayList<String> words = new ArrayList<>();
+            if (kgIndex == null || !queryTerm.term.contains("*")) {
+                words.add(queryTerm.term);
+            } else {
+                words = kgIndex.getWildcardWords(queryTerm.term);
+            }
             // Compute qtf
             double qtf = queryTerm.weight;
 
+            for (String word : words){
+                // Compute df
+                PostingsList pl = index.getPostings(word);
+                /*PostingsList pl = pls[i];*/
+                int df = pl.size();
+                double Wtq = calWeight(qtf, df, pl, index, tf_scheme, df_scheme);
+
+
+                for (PostingsEntry e : pl.getList()){
+                    Integer docID = e.docID;
+                    // Check if the current query term exists in the current document
+                    double tf = e.getTf();
+                    // Compute weight
+                    double Wftd = calWeight(tf, df, pl, index, tf_scheme, df_scheme);
+                    double weight = Wftd * Wtq;
+                    score.merge(docID, weight, Double::sum);
+                }
+            }
+
             // Compute df
-            PostingsList pl = index.getPostings(queryTerm.term);
+//            PostingsList pl = index.getPostings(queryTerm.term);
+            PostingsList pl = pls[i];
             int df = pl.size();
             double Wtq = calWeight(qtf, df, pl, index, tf_scheme, df_scheme);
 

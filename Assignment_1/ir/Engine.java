@@ -29,9 +29,9 @@ public class Engine {
     Searcher searcher;
 
     /** K-gram index */
-    KGramIndex kgIndex = null;
+//    KGramIndex kgIndex = null;
     // Assignment 3: Comment the line above and uncomment the next line
-    // KgramIndex kgIndex = new KGramIndex(2);
+    KGramIndex kgIndex = new KGramIndex(2);
 
     /** Spell checker */
     SpellChecker speller;
@@ -75,8 +75,8 @@ public class Engine {
         gui.init();
         /* 
          *   Calls the indexer to index the chosen directory structure.
-         *   Access to the index is synchronized since we don't want to 
-         *   search at the same time we're indexing new files (this might 
+         *   Access to the index is synchronized since we don't want to
+         *   search at the same time we're indexing new files (this might
          *   corrupt the index).
          */
         if (is_indexing) {
@@ -106,6 +106,12 @@ public class Engine {
             }
         } else {
             gui.displayInfoText( "Index is loaded from disk" );
+        }
+        if (kgIndex != null) {
+            System.out.println("Number of words containing bigram \"ve\": " +
+                    kgIndex.getWords(new String[]{ "ve" }).size());
+            System.out.println("Number of words containing bigrams \"th he\": " +
+                    kgIndex.getWords(new String[]{ "th", "he" }).size());
         }
     }
 

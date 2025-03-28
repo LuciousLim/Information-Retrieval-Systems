@@ -16,44 +16,45 @@
 
 // ADD YOUR PATTERNS HERE
 
-// URI
-https?:\/\/[^\s<>{}|\\"']+
+// URLs
+https?:\/\/.+
 
-// Dollar$
-\b\$\d+([-,\.]\d+)+\b
+// E-mails
+[\w\.]+@[\w\.]+\.[\w]+
 
-// Combined number
-\b\d+([-,\.]\d+)+\b
-
-// Phone number
+// Phone numbers (e.g. 1-213-555-0123, +13015550100)
+(\d+-)+\d+
 \+\d+
 
-// Email
-([^\s"'\\!:\/])+@[^\s"'\\!:\/]+
+// Combined words (e.g. fully-qualified-person)
+(\w+-)+\w+
 
-// Compound word (xxxx-xxxx)
-\w+-\w+
+// "Marked" numbers (e.g. 7,919,900)
+(\d+,)+\d+
 
-// xx'xx
-\b\w+'+\w+\b
+// Dollar amounts (e.g. $80)
+\$\d+
 
-// Citation
-(?<='|")(\w+)(?="|')
+// Combined words (e.g. can't)
+\w+'\w+
+// Allow apostrophe at the beginning if not also at the end (e.g. 'em but not 'gaffe')
+//'\w+\Z
+'em
 
-// 'xx
-'+\w+\b
-
-// Clock
-\d+(:\d+)+
-
-// e.g.
-\b\w+\.\w+\.
-
-// File
-\b\w+\.\w+
+// Time clock (e.g. 18:15:34)
+(\d+:)+\d+
 
 // Twenty-four seven
 \d+/\d+
+
+// Section digits (e.g. 2.4.1), IP numbers (e.g. 192.168.255.255)
+(\d+\.)+\d+
+
+// Abbreviations
+(\w+\.){2,}
+
+// File extensions (e.g. cake.ppt)
+\w+\.(ppt|doc|xlsx|jpg|jpeg|png|docx|txt)
 
 
 

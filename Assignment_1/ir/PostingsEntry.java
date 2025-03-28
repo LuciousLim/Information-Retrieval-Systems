@@ -72,6 +72,8 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         return offsets.size();
     }
 
+    public int getDocID(){return docID;}
+
 
     //
     // YOUR CODE HERE

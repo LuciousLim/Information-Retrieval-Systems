@@ -34,20 +34,21 @@ public class Searcher {
      *  @return A postings list representing the result of the query.
      */
     public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normType ) {
+        PostingsList[] pls = prepareList(query);
 
         // task 1.2, single word search
         if(query.queryterm.size() == 1 && !queryType.equals(QueryType.RANKED_QUERY)){
-            return this.index.getPostings(query.queryterm.get(0).term);
+//            return this.index.getPostings(query.queryterm.get(0).term);
+            return pls[0];
         }
 
         // task 1.3, intersect search
         else if (query.queryterm.size() > 1 && queryType.equals(QueryType.INTERSECTION_QUERY)){
-//            return intersection(extractPostingLists(query));
             PostingsList result = null;
 
             // traverse the queryterms
             for (int i = 0; i < query.queryterm.size(); i++){
-                PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
+                PostingsList postingsList = pls[i];
 
                 // return an empty list if the posting list is empty,
                 if (postingsList == null){
@@ -74,7 +75,7 @@ public class Searcher {
 
             // traverse the queryterms
             for (int i = 0; i < query.queryterm.size(); i++){
-                PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
+                PostingsList postingsList = pls[i];
 
                 // return an empty list if the posting list is empty,
                 if (postingsList == null){
@@ -97,10 +98,48 @@ public class Searcher {
         else if (queryType.equals(QueryType.RANKED_QUERY)){
 //            PostingsList result = rankSearch(query, index);
             PostingsList result = new PostingsList();
-            return rank(query, result, index, "n", "t", rankingType, normType);
+            return rank(query, result, pls, index, "n", "t", rankingType, normType);
         }
 
         return null;
+    }
+
+    public PostingsList[] prepareList(Query query){
+        PostingsList[] pls = new PostingsList[query.size()];
+
+        for (int i = 0; i < query.size(); i++){
+            if (kgIndex == null || !query.queryterm.get(i).term.contains("*")){
+                pls[i] = index.getPostings(query.queryterm.get(i).term);
+            } else {
+                PostingsList pl = new PostingsList();
+                ArrayList<String> words = kgIndex.getWildcardWords(query.queryterm.get(i).term);
+                for (String word : words) {
+                    PostingsList p = index.getPostings(word);
+                    for (int j = 0; j < p.size(); ++j) {
+                        pl.insert(p.get(j));
+                    }
+                }
+
+                pl.sortByDocID();
+                PostingsList result = new PostingsList();
+                int lastDoc = -1;
+                for (int j = 0; j < pl.size(); j++) {
+                    PostingsEntry pe = pl.get(j);
+                    if (pe.docID != lastDoc) {
+                        result.add(pe);
+                    } else {
+                        int offsetsLen = pe.offsets.size();
+                        for (int k = 0; k < offsetsLen; k++){
+                            result.get(result.size() - 1).addOffset(pe.offsets.get(k));
+                        }
+                        Collections.sort(result.get(result.size() - 1).offsets);
+                    }
+                    lastDoc = pe.docID;
+                }
+                pls[i] = result;
+            }
+        }
+        return pls;
     }
 
 
@@ -157,8 +196,6 @@ public class Searcher {
     }
 
     public PostingsList rankSearch(Query query, Index index) {
-        System.out.println("1 Start");
-
         Set<PostingsEntry> resultSet = new HashSet<>();
 
         for (Query.QueryTerm t : query.queryterm) {
@@ -172,15 +209,13 @@ public class Searcher {
         for (PostingsEntry entry : resultSet) {
             postingsList.add(entry);
         }
-
-        System.out.println("1 End");
         return postingsList;
     }
 
-    public PostingsList rank(Query query, PostingsList postingsList, Index index, String tf_scheme, String df_scheme,
+    public PostingsList rank(Query query, PostingsList postingsList, PostingsList[] pls, Index index, String tf_scheme, String df_scheme,
                              RankingType type, NormalizationType normType ){
         return switch (type){
-            case TF_IDF -> Ranking.tf_idf(query, postingsList, index, tf_scheme, df_scheme, normType);
+            case TF_IDF -> Ranking.tf_idf(query, pls, index, tf_scheme, df_scheme, normType, kgIndex);
             case PAGERANK -> Ranking.pageRank(postingsList, index);
             case COMBINATION -> Ranking.combination(query, postingsList, index, tf_scheme, df_scheme, normType);
         };

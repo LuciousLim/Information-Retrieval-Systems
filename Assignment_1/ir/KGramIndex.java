@@ -51,27 +51,117 @@ public class KGramIndex {
      *  Get intersection of two postings lists
      */
     private List<KGramPostingsEntry> intersect(List<KGramPostingsEntry> p1, List<KGramPostingsEntry> p2) {
-        // 
-        // YOUR CODE HERE
-        //
-        return null;
+        List<KGramPostingsEntry> result = new ArrayList<>(Math.min(p1.size(), p2.size()));
+        int i1 = 0, i2 = 0;
+
+        while (i1 < p1.size() && i2 < p2.size()) {
+            KGramPostingsEntry entry1 = p1.get(i1);
+            KGramPostingsEntry entry2 = p2.get(i2);
+
+            if (entry1.tokenID == entry2.tokenID) {
+                result.add(entry1);
+                i1++;
+                i2++;
+            } else if (entry1.tokenID < entry2.tokenID) {
+                i1++;
+            } else {
+                i2++;
+            }
+        }
+        return result;
     }
 
 
     /** Inserts all k-grams from a token into the index. */
-    public void insert( String token ) {
-        //
-        // YOUR CODE HERE
-        //
+    public void insert(String token) {
+        if (term2id.containsKey(token)) return;
+
+        int termID = generateTermID();
+        term2id.put(token, termID);
+        id2term.put(termID, token);
+
+        token = "^" + token + "$";
+
+        for (int i = 0; i <= token.length() - K; i++) {
+            String kgram = token.substring(i, i + K);
+
+            // Retrieve or create the postings list for the K-gram
+            List<KGramPostingsEntry> postings = index.computeIfAbsent(kgram, k -> new ArrayList<>());
+
+            // Avoid duplicate insertion of termID
+            if (postings.isEmpty() || postings.get(postings.size() - 1).tokenID != termID) {
+                postings.add(new KGramPostingsEntry(termID));
+            }
+        }
     }
 
     /** Get postings for the given k-gram */
     public List<KGramPostingsEntry> getPostings(String kgram) {
-        //
-        // YOUR CODE HERE
-        //
-        return null;
+        return index.getOrDefault(kgram, Collections.emptyList());
     }
+
+    public ArrayList<String> getWords(String[] kgrams) {
+        List<KGramPostingsEntry> postings = null;
+        for (String kgram : kgrams) {
+            if (kgram.length() != K) {
+                System.err.println("Cannot search k-gram index: " + kgram.length() + "-gram provided instead of " + K + "-gram");
+            }
+
+            if (postings == null) {
+                postings = getPostings(kgram);
+            } else {
+                postings = intersect(postings, getPostings(kgram));
+            }
+        }
+        ArrayList<String> words = new ArrayList<>();
+        for (KGramPostingsEntry entry : postings) {
+            words.add(id2term.get(entry.tokenID));
+        }
+        return words;
+    }
+
+    public ArrayList<String> getWildcardWords(String wildcard) {
+        int asterisk = wildcard.indexOf("*");
+        if (asterisk == -1) {
+            return new ArrayList<>(); // Return empty list if no wildcard is present
+        }
+
+        String prefix = "^" + wildcard.substring(0, asterisk);
+        String suffix = wildcard.substring(asterisk + 1) + "$";
+
+        // Generate k-grams
+        ArrayList<String> kgrams = new ArrayList<>();
+        int prefixLen = prefix.length();
+        int suffixLen = suffix.length();
+
+        if (prefixLen >= K) {
+            for (int i = 0; i <= prefixLen - K; i++) {
+                kgrams.add(prefix.substring(i, i + K));
+            }
+        }
+        if (suffixLen >= K) {
+            for (int i = 0; i <= suffixLen - K; i++) {
+                kgrams.add(suffix.substring(i, i + K));
+            }
+        }
+
+        // Retrieve all possible matching words from k-gram index
+        ArrayList<String> words = getWords(kgrams.toArray(new String[0]));
+
+        // Filter words that match both the prefix and suffix
+        String prefixFilter = prefix.substring(1); // Remove '^'
+        String suffixFilter = suffix.substring(0, suffix.length() - 1); // Remove '$'
+        ArrayList<String> result = new ArrayList<>(words.size());
+
+        for (String word : words) {
+            if (word.startsWith(prefixFilter) && word.endsWith(suffixFilter)) {
+                result.add(word);
+            }
+        }
+
+        return result;
+    }
+
 
     /** Get id of a term */
     public Integer getIDByTerm(String term) {

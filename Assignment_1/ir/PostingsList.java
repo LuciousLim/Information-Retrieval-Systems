@@ -9,6 +9,8 @@ package ir;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class PostingsList {
     
@@ -88,6 +90,10 @@ public class PostingsList {
             list.add(new PostingsEntry(docID, offset));
         }
     }
+
+    public void insert(PostingsEntry postingsEntry){
+        list.add(postingsEntry);
+    }
     // 
     //  YOUR CODE HERE
     //
@@ -141,6 +147,10 @@ public class PostingsList {
         }
 
         return postingsList;
+    }
+
+    public void sortByDocID() {
+        list.sort(Comparator.comparingInt((PostingsEntry a) -> a.docID));
     }
 }
 
